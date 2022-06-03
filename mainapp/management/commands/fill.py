@@ -3,7 +3,7 @@ import json
 from django.conf import settings
 from django.core.management import BaseCommand
 
-from mainapp.models import Category
+from mainapp.models import Category, Product
 
 
 class Command(BaseCommand):
@@ -17,6 +17,29 @@ class Command(BaseCommand):
         Category.objects.all().delete()
 
         categories_list = self._load_data_from_file('categories')
-        print(categories_list)
 
+        categories_batch = []
+        for cat in categories_list:
 
+            # Category.objects.create(
+            #     name=cat.get('name'),
+            #     description=cat.get('description')
+            # )
+            categories_batch.append(
+                Category(
+                    name=cat.get('name'),
+                    description=cat.get('description')
+                )
+            )
+
+        Category.objects.bulk_create(categories_batch)
+
+        Product.objects.all().delete()
+
+        products_list = self._load_data_from_file('products')
+
+        for prod in products_list:
+            _cat = Category.objects.get(name=prod.get('category'))
+            prod['category'] = _cat
+
+            Product.objects.create(**prod)
